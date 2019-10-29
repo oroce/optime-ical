@@ -39,15 +39,19 @@ async function getEvents() {
     if (!token) {
         throw error(404, 'Token was not in the html');
     }
+    const date20DaysAgo = dateFns.subDays(new Date(), 20);
+    const fromYear = dateFns.format(date20DaysAgo, 'yyyy');
+    const fromMonth = dateFns.format(date20DaysAgo, 'MM');
+    const fromDay = dateFns.format(date20DaysAgo, 'dd');
 
     const applications = await got('https://secure.myoptime.eu/fit/applications', {
         query: {
             session: token,
         },
         body: {
-            tolev: 2019,
-            tolho: '10',
-            tolnap: '01',
+            tolev: fromYear,
+            tolho: fromMonth,
+            tolnap: fromDay,
             igev: '',
             igho: '',
             ignap: '',
