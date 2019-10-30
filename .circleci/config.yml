@@ -25,72 +25,52 @@ jobs:
       
       - run: npm run lint
 
-  propose_release_auto:
+      - persist_to_workspace:
+          root: ~/repo
+          paths: .
+
+  creating auto release:
     docker:
       - image: circleci/node:12
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - attach_workspace:
+          at: ~/repo
       - run: npm run release
-  propose_release_prerelease:
+  creating prerelease:
     docker:
       - image: circleci/node:12
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - attach_workspace:
+          at: ~/repo
       - run: npm run release -- --release-as=prerelease
-  propose_release_patch:
+  creating patch release:
     docker:
       - image: circleci/node:12
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - attach_workspace:
+          at: ~/repo
       - run: npm run release -- --release-as=patch
-  propose_release_minor:
+  creating minor release:
     docker:
       - image: circleci/node:12
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - attach_workspace:
+          at: ~/repo
       - run: npm run release -- --release-as=minor
-  propose_release_major:
+  creating major release:
     docker:
       - image: circleci/node:12
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-      - run: npm run release -- --release-as=minor
+      - attach_workspace:
+          at: ~/repo
+      - run: npm run release -- --release-as=major
 
   release:
     docker:
       - image: circleci/node:12
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - attach_workspace:
+          at: ~/repo
       - run: echo "build release assets"
   
   deploy:
@@ -100,10 +80,10 @@ jobs:
       - run: echo "serverless deploy"
 workflows:
   version: 2
-  build_and_test:
+  test and lint:
     jobs:
       - test
-      - release_auto:
+      - create auto release:
           type: approval
           requires:
             - test
@@ -112,7 +92,7 @@ workflows:
               ignore: /.*/
             branches:
               only: /^master$/
-      - release_prerelease:
+      - create prerelease:
           type: approval
           requires:
             - test
@@ -121,7 +101,7 @@ workflows:
               ignore: /.*/
             branches:
               ignore: /^master$/
-      - release_patch:
+      - create patch release:
           type: approval
           requires:
             - test
@@ -130,7 +110,7 @@ workflows:
               ignore: /.*/
             branches:
               only: /^master$/
-      - release_minor:
+      - create minor release:
           type: approval
           requires:
             - test
@@ -139,7 +119,7 @@ workflows:
               ignore: /.*/
             branches:
               only: /^master$/
-      - release_major:
+      - create major release:
           type: approval
           requires:
             - test
@@ -149,21 +129,21 @@ workflows:
             branches:
               only: /^master$/
 
-      - propose_release_auto:
+      - creating auto release:
           requires:
-            - release_auto
-      - propose_release_prerelease:
+            - create auto release
+      - creating prerelease:
           requires:
-            - release_prerelease
-      - propose_release_patch:
+            - create prerelease
+      - creating patch release:
           requires:
-            - release_patch
-      - propose_release_minor:
+            - create patch release
+      - creating minor release:
           requires:
-            - release_minor
-      - propose_release_major:
+            - create minor release
+      - creating major release:
           requires:
-            - release_major
+            - create major release
 
   release:
     jobs:
