@@ -22,8 +22,118 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
+  test:
+    docker:
+      - image: circleci/node:12
 
+    steps:
       - run: npm run lint
-           
-      # run tests!
-      #- run: npm test
+
+  propose_release_auto:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - run: npm run release
+  propose_release_prerelease:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - run: npm run release -- --release-as=prerelease
+  propose_release_patch:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - run: npm run release -- --release-as=patch
+  propose_release_minor:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - run: npm run release -- --release-as=minor
+  propose_release_major:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - run: npm run release -- --release-as=minor
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test
+      - release_auto:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+      - release_prerelease:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              ignore: /^master$/
+      - release_patch:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+      - release_minor:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+      - release_major:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+
+      - propose_release_auto:
+          requires:
+            - release_auto
+      - propose_release_prerelease:
+          requires:
+            - release_prerelease
+      - propose_release_patch:
+          requires:
+            - release_patch
+      - propose_release_minor:
+          requires:
+            - release_minor
+      - propose_release_major:
+          requires:
+            - release_major
+
+  release:
+    jobs:
+      - build
+      - test
+      - release
+  deploy:
+
+    jobs:
+      - deploy_to_lambda:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
