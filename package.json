@@ -33,5 +33,8 @@
     ],
     "coverageDirectory": "./coverage",
     "globals": {}
+  },
+  "repository": {
+    "url": "https://github.com/oroce/optime-ical.git"
   }
 }
