@@ -44,6 +44,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/repo
+      - run: git config --global user.email "bot@oroszi.net"
+      - run: git config --global user.name "oroszibot"
       - run: npm run release -- --release-as=prerelease
   creating patch release:
     docker:
