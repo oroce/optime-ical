@@ -81,6 +81,23 @@ jobs:
             - v1-dependencies-
       - run: npm run release -- --release-as=minor
 
+  release:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run: echo "build release assets"
+  
+  deploy:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - run: echo "serverless deploy"
 workflows:
   version: 2
   build_and_test:
@@ -150,12 +167,30 @@ workflows:
 
   release:
     jobs:
-      - test
-      - release
-  deploy:
-
-    jobs:
-      - deploy_to_lambda:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - release:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - manual_approval:
+          type: approval
+          requires:
+            - release
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - deploy:
+          requires:
+            - manual_approval
           filters:
             tags:
               only: /^v.*/
