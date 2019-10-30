@@ -47,6 +47,8 @@ jobs:
       - run: git config --global user.email "bot@oroszi.net"
       - run: git config --global user.name "oroszibot"
       - run: npm run release -- --release-as=prerelease
+      - run: git push --follow-tags origin $CIRCLE_BRANCH
+      - run: npm run changelog
   creating patch release:
     docker:
       - image: circleci/node:12
