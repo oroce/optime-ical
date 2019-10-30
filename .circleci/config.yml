@@ -47,7 +47,7 @@ jobs:
       - run: git config --global user.email "bot@oroszi.net"
       - run: git config --global user.name "oroszibot"
       - run: npm run release -- --release-as=prerelease
-      - run: git push --follow-tags origin $CIRCLE_BRANCH
+      - run: git push --follow-tags -q https://${CONVENTIONAL_GITHUB_RELEASER_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git $CIRCLE_BRANCH 
       - run: npm run changelog
   creating patch release:
     docker:
