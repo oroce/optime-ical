@@ -4,18 +4,28 @@
   "description": "create ical from optime courses",
   "main": "handler.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --rootDir=src --testPathPattern=\"['.*.spec.js'\"]",
+    "test.watch": "npm test -- --watch --bail"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
     "date-fns": "^2.6.0",
+    "date-fns-tz": "^1.0.8",
     "got": "^9.6.0",
     "ical-generator": "^1.8.1"
   },
   "devDependencies": {
     "jest": "^24.9.0",
     "serverless-offline": "^5.12.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coverageDirectory": "./coverage",
+    "globals": {}
   }
 }

@@ -2,15 +2,9 @@
 const got = require('got');
 const cheerio = require('cheerio');
 const dateFns = require('date-fns');
-const ical = require('ical-generator');
-const crypto = require('crypto');
-const config = {
-    username: process.env.OPTIME_USERNAME,
-    password: process.env.OPTIME_PASSWORD,
-    eventFields: {
-        location: process.env.EVENT_FIELD_LOCATION
-    }
-};
+const toEvents = require('./src/to-events');
+const toIcal = require8'./src/to-ical');
+const config = require('./src/config');
 function error(statusCode, message) {
     const err = new Error(message);
     err.statusCode = statusCode;
@@ -63,64 +57,23 @@ async function getEvents() {
         form: true,
         rejectUnauthorized: false
     });
-    const $ = cheerio.load(applications.body);
-
-    const courses = $('.admTartTblRek tr').get()
-        .map((el, i) => {
-            if (i === 0) {
-                return;
-            }
-            const cols = $(el).find('td');
-            const date = $(cols[0]).text().replace(/\\n/gm, '').trim();
-            const time = $(cols[1]).text().replace(/\\n/gm, '').trim();
-            const training = $(cols[2]).text().replace(/\\n/gm, '').trim();
-            const room = $(cols[3]).text().replace(/\\n/gm, '').trim();
-            return {
-                date, time, training, room
-            };
-        })
-        .filter(row => row != null)
-        .map(row => {
-            const date = dateFns.parse(row.date.match(/(\d{4}\.\d{1,2}\.\d{1,2}\.)/)[0], 'yyyy.MM.dd.', new Date());
-            const timeSlots = row.time.split(' - ');
-            const start = dateFns.parse(timeSlots[0], 'H:m', date);
-            const end = dateFns.parse(timeSlots[1], 'H:m', date);
-            const shasum = crypto.createHash('sha1');
-            shasum.update(config.username);
-            shasum.update(start.toJSON());
-            shasum.update(end.toJSON());
-            shasum.update(row.training);
-            shasum.update(row.room);
-            const id = shasum.digest('hex');
-            return {
-                ...config.eventFields,
-                id,
-                start,
-                end,
-                summary: `${row.training} (${row.room})`
-            }
-        });
     
-    return courses;
+
+    return toEvents(applications.body);
+
 };
 
 module.exports.ical = async (event) => {
     try {
         const events = await getEvents();
-        const calendar = ical({
-            domain: 'optime.oroszi.net',
-            name: 'Optime',
-            prodId: '//oroszi.net.com//optime-ical-generator//EN',
-            events
-        });
-
+        const calendar = toIcal(events);
         return {
             statusCode: 200,
             headers: {
                 'Content-Type': 'text/calendar; charset=utf-8',
                 'Content-Disposition': 'attachment; filename="calendar.ics"'
             },
-            body: calendar._generate()
+            body: calendar
         };
     } catch (ex) {
         return {
