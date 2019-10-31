@@ -1,6 +1,6 @@
 {
   "name": "optime-ical",
-  "version": "1.0.0",
+  "version": "1.0.1-0",
   "description": "create ical from optime courses",
   "main": "handler.js",
   "scripts": {
