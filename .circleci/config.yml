@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/node:12
 
@@ -22,8 +22,168 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-
+      
       - run: npm run lint
-           
-      # run tests!
-      #- run: npm test
+
+      - persist_to_workspace:
+          root: ~/repo
+          paths: .
+
+  creating auto release:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run: npm run release
+  creating prerelease:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run: git config --global user.email "bot@oroszi.net"
+      - run: git config --global user.name "oroszibot"
+      - run: npm run release -- --release-as=prerelease
+      - run: git push --follow-tags -q https://${CONVENTIONAL_GITHUB_RELEASER_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git $CIRCLE_BRANCH 
+      - run: npm run changelog
+  creating patch release:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run: npm run release -- --release-as=patch
+  creating minor release:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run: npm run release -- --release-as=minor
+  creating major release:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run: npm run release -- --release-as=major
+
+  release:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run: echo "build release assets"
+  
+  deploy:
+    docker:
+      - image: circleci/node:12
+    working_directory: ~/repo
+    steps:
+      - run: echo "serverless deploy"
+workflows:
+  version: 2
+  test and lint:
+    jobs:
+      - test
+      - create auto release:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+      - create prerelease:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              ignore: /^master$/
+      - create patch release:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+      - create minor release:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+      - create major release:
+          type: approval
+          requires:
+            - test
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /^master$/
+
+      - creating auto release:
+          requires:
+            - create auto release
+      - creating prerelease:
+          requires:
+            - create prerelease
+      - creating patch release:
+          requires:
+            - create patch release
+      - creating minor release:
+          requires:
+            - create minor release
+      - creating major release:
+          requires:
+            - create major release
+
+  release:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - release:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - manual_approval:
+          type: approval
+          requires:
+            - release
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - deploy:
+          requires:
+            - manual_approval
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
