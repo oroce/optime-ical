@@ -26,6 +26,7 @@ describe('toIcal', () => {
       name: 'Optime',
       prodId: '//oroszi.net//optime-ical-generator//EN',
       timezone: 'UTC',
+      ttl: 300,
       events
     });
   });
