@@ -111,6 +111,7 @@ module.exports.ical = async (event) => {
       domain: 'optime.oroszi.net',
       name: 'Optime',
       prodId: '//oroszi.net.com//optime-ical-generator//EN',
+      ttl: 60 * 5,
       events
     });
 
@@ -125,9 +126,9 @@ module.exports.ical = async (event) => {
   } catch (ex) {
     return {
       statusCode: ex.statusCode || 500,
+      body: ex.message,
       headers: {
-        'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="calendar.ics"'
+        'Content-Type': 'text/plain; charset=utf-8',
       }
     };
   }
