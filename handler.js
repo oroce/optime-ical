@@ -77,7 +77,7 @@ module.exports.ical = async (event) => {
       statusCode: ex.statusCode || 500,
       body: ex.message,
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Type': 'text/plain; charset=utf-8'
       }
     };
   }
