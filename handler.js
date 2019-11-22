@@ -75,9 +75,9 @@ module.exports.ical = async (event) => {
   } catch (ex) {
     return {
       statusCode: ex.statusCode || 500,
+      body: ex.message,
       headers: {
-        'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="calendar.ics"'
+        'Content-Type': 'text/plain; charset=utf-8',
       }
     };
   }

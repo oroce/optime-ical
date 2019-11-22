@@ -5,6 +5,7 @@ module.exports = (events) => {
     name: 'Optime',
     prodId: '//oroszi.net//optime-ical-generator//EN',
     timezone: 'UTC',
+    ttl: 60 * 5,
     events
   });
   return calendar._generate();
