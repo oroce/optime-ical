@@ -23,7 +23,7 @@ async function getEvents () {
     form: true,
     rejectUnauthorized: false
   });
-  const matches = response.body.match(/href="timetable\?session=(.*)">HELYF/);
+  const matches = response.body.match(/eu\/fit\/timetable\?session=(.*)';/);
   if (matches == null) {
     throw error(404, 'No token like html were found in the response (wrong credentials maybe?)');
   }
