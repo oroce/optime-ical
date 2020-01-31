@@ -5,18 +5,15 @@ const config = require('./config');
 const { zonedTimeToUtc } = require('date-fns-tz');
 module.exports = (body) => {
   const $ = cheerio.load(body);
-  const els = $('.card').get();
+  const els = $('.row.mx-auto').get();
   return els
-    .map((el, i) => {
-      if (i === 0) {
-        return;
-      }
+    .map((el) => {
+      const cols = $(el).find('.col-6').toArray();
 
-      const time = $(el).find('.card-header h5').text();
-      const training = $(el).find('.card-header h4').text();
-      const room = $(el).find('.card-body').text().replace(/\\n/gm, '').trim();
-      const dateEl = $(el).find('.card-header')[0].children.find(child => child.type === 'text');
-      const date = dateEl ? dateEl.data : '';
+      const time = $(cols[0]).text().trim();
+      const training = $(el).find('h5').text();
+      const room = $(cols[1]).text().replace(/\\n/gm, '').trim();
+      const date = $(cols[2]).text().trim()
 
       return {
         date, time, training, room
